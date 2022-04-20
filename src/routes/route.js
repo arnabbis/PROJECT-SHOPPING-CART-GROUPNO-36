@@ -23,22 +23,22 @@ router.post("/products", productController.createProduct)
 router.get("/products/:productId", productController.getProductDetails)
 router.put("/products/:productId", productController.updateTheProduct)
 router.delete("/products/:productId", productController.productDelete)
-router.get("/products", productController.productsDetails)
+router.get("/products", productController.getProductByQuery)
 
 // =============================CART====================================
 
 
-router.post("/users/:userId/cart", cartController.createCart)
-router.put("/users/:userId/cart", cartController.updateCart)
-router.get("/users/:userId/cart", cartController.getCart)
-router.delete("/users/:userId/cart", cartController.deleteCart)
+router.post("/users/:userId/cart", mid.authentication, cartController.createCart)
+router.put("/users/:userId/cart", mid.authentication, cartController.updateCart)
+router.get("/users/:userId/cart", mid.authentication, cartController.getCart)
+router.delete("/users/:userId/cart", mid.authentication, cartController.deleteCart)
 
 
 //==============================ORDER=====================================
 
 
-router.post("/users/:userId/orders", orderController.createOrder)
-router.put("/users/:userId/orders", orderController.updateOrder)
+router.post("/users/:userId/orders", mid.authentication, orderController.createOrder)
+router.put("/users/:userId/orders", mid.authentication, orderController.updateOrder)
 
 
 //========================================================================

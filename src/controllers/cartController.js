@@ -47,7 +47,6 @@ const createCart = async function(req, res) {
             return
         }
 
-
         const isProductPresent = await productModel.findOne({ _id: productId, isDeleted: false })
 
         if (!isProductPresent) {
@@ -80,7 +79,12 @@ const createCart = async function(req, res) {
                 });
             }
 
-            if (cartId !== cartIdForUser._id.toString()) {
+            if (req.userId != cartIdForUser.userId) {
+                res.status(401).send({ status: false, message: "You are not authorized to add product to this cart" })
+                return
+            }
+
+            if (cartId != cartIdForUser._id.toString()) {
                 return res.status(403).send({
                     status: false,
                     message: `User is not allowed to update this cart`,
@@ -116,7 +120,10 @@ const createCart = async function(req, res) {
             if (isCartPresentForUser) {
                 return res.status(400).send({ status: false, message: "cart already exist, provide cartId in req. body", });
             }
-
+            // if (req.userId !== isCartPresentForUser.userId.toString()) {
+            //     res.status(401).send({ status: false, message: "You are not authorized to create and update the cart" })
+            //     return
+            // }
             const productData = {
                 productId: productId,
                 quantity: 1
@@ -157,10 +164,10 @@ const updateCart = async(req, res) => {
         }
 
         //Authentication & authorization
-        // if (findUser._id.toString() != userIdFromToken) {
-        //     res.status(401).send({ status: false, message: `Unauthorized access! User's info doesn't match` });
-        //     return
-        // }
+        if (findUser._id.toString() != req.userId) {
+            res.status(401).send({ status: false, message: `Unauthorized access! User's info doesn't match` });
+            return
+        }
 
         //Extract body
         const { cartId, productId, removeProduct } = requestBody
@@ -261,6 +268,11 @@ const getCart = async(req, res) => {
         const returningCart = await cartModel.find({ userId: userId })
         if (!returningCart) { return res.status(400).send({ status: false, Data: "No Items added to cart" }) }
 
+        if (req.userId != oneUser._id) {
+            res.status(401).send({ status: false, message: "Unauthorized access! You are not authorized to Get this cart details" });
+            return
+        }
+
         // let detailsOfItemsByUser={oneUser,returningCart}
 
         return res.status(200).send({ status: true, message: 'Success', data: returningCart })
@@ -283,6 +295,11 @@ const deleteCart = async(req, res) => {
         }
 
         const findCartById = await cartModel.findOne({ userId: userId }) //.select({"items[0].productId":1,_id:1})
+
+        if (findProductById._id != req.userId) {
+            res.status(401).send({ status: false, message: "Unauthorized access! You are not authorized to Delete product from this cart" });
+            return
+        }
 
         if (findCartById.items.length === 0) {
             return res.status(400).send({ status: false, message: "Product Already deleted" })

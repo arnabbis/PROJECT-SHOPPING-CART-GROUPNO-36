@@ -20,15 +20,13 @@ const productSchema = new mongoose.Schema({
     },
     currencyId: {
         type: String,
-        required: true,
+        required: [true, "currencyId is required"],
         trim: true,
-        default: "INR"
+        uppercase: true,
     },
     currencyFormat: {
         type: String,
-        required: true,
-        trim: true,
-        default: '₹'
+        required: [true, "currencyFormat is required"],
     },
     isFreeShipping: {
         type: Boolean,

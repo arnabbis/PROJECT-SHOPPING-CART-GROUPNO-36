@@ -57,10 +57,10 @@ const createOrder = async(req, res) => {
             });
         }
         //Authentication & authorization
-        // if (searchUser._id.toString() != req.userId) {
-        //     res.status(401).send({ status: false, message: `Unauthorized access! User's info doesn't match` });
-        //     return
-        // }
+        if (searchUser._id.toString() != req.userId) {
+            res.status(401).send({ status: false, message: `Unauthorized access! User's info doesn't match` });
+            return
+        }
 
         if (!cartId) {
             return res.status(400).send({
@@ -182,10 +182,10 @@ const updateOrder = async(req, res) => {
         }
 
         //Authentication & authorization
-        // if (searchUser._id.toString() != req.userId) {
-        //     res.status(401).send({ status: false, message: `Unauthorized access! User's info doesn't match` });
-        //     return
-        // }
+        if (searchUser._id.toString() != req.userId) {
+            res.status(401).send({ status: false, message: `Unauthorized access! User's info doesn't match` });
+            return
+        }
 
         if (!orderId) {
             return res.status(400).send({
@@ -251,23 +251,14 @@ const updateOrder = async(req, res) => {
             }
         }
 
-        if (isOrderBelongsToUser['status'] == "pending") {
-            if (status) {
-                if (!["completed", "cancelled"].indexOf(status) === -1) {
-                    return res.status(400).send({
-                        status: false,
-                        message: `Unable to update status due to Non-cancellation policy.`
-                    })
-                }
 
-                // if ((status === 'pending' || status === 'completed' || status === 'cancelled')) {
-                const updatedOrderDetails = await OrderModel.findOneAndUpdate({ _id: orderId }, { $set: { status: status } }, { new: true })
 
-                return res.status(200).send({ status: true, message: `Successfully updated the order details.`, data: updatedOrderDetails })
-                    // }
-                    // return res.status(400).send({ status: true, message: `Status must be either- 'pending','completed' & 'cancelled'.` })
-            }
-        }
+        const updatedOrderDetails = await OrderModel.findOneAndUpdate({ _id: orderId }, { $set: { status: status } }, { new: true })
+
+        return res.status(200).send({ status: true, message: `Successfully updated the order details.`, data: updatedOrderDetails })
+
+
+
 
     } catch (err) {
         return res.status(500).send({ status: false, message: err.message });
