@@ -129,65 +129,97 @@ const createProduct = async function(req, res) {
 //===============================GET BY QUERY==================================
 
 
-const getProductByQuery = async function(req, res) {
+const getProductByQuery = async(req, res) => {
     try {
-        const { size, name, priceGreaterThan, priceLessThan, priceSort } = req.query
-        if (size || name || priceGreaterThan || priceLessThan) {
+        let { name, description, price, currencyId, currencyFormat, style, size, priceGreaterThan, priceLessThan, priceSort } = req.query;
+        let myObj = {};
+        if (name != null) myObj.name = name;
+        if (description != null) myObj.description = description;
+        if (price != null) myObj.price = price;
+        if (currencyId != null) myObj.currencyId = currencyId;
+        if (currencyFormat != null) myObj.currencyFormat = currencyFormat;
+        if (style != null) myObj.style = style;
+        if (size != null) myObj.size = size;
+        if (priceGreaterThan != null) myObj.priceGreaterThan = priceGreaterThan;
+        if (priceLessThan != null) myObj.priceLessThan = priceLessThan;
+        if (priceSort != null) myObj.priceSort = priceSort;
 
-            obj = {}
+        myObj.isDeleted = false;
+
+        if (!Object.keys(req.query).length > 0) return res.status(400).send({ status: true, message: "Please Provide Product data in query" })
+
+        if ("size" in myObj) {
+            myObj['availableSizes'] = size
             if (size) {
-                obj.availableSizes = size
-            }
-            if (name) {
-                obj.title = { $regex: name }
-
-            }
-            if (priceGreaterThan) {
-                if (priceGreaterThan <= 0) {
-                    return res.status(400).send({ status: false, message: `priceGreaterThan should be a valid number` })
-                }
-                obj.price = { $gt: priceGreaterThan }
-            }
-            if (priceLessThan) {
-                if (priceLessThan <= 0) {
-                    return res.status(400).send({ status: false, message: `priceLessThan should be a valid number` })
-                }
-
-                obj.price = { $lt: priceLessThan }
-            }
-            obj.isDeleted = false
-            obj.deletedAt = null
-
-            if (priceSort) {
-                if (!((priceSort == 1) || (priceSort == -1))) {
-                    return res.status(400).send({ status: false, message: `priceSort should be 1 or -1 ` })
-                }
-
-                const products = await productModel.find(obj).sort({ price: -1 })
-
-                if (!products || products.length == 0) {
-                    res.status(400).send({ status: false, message: `product is not available right now.` })
-
-                    return res.status(200).send({ status: true, message: 'Product list', data: products })
+                if (!["S", "XS", "M", "X", "L", "XXL", "XL"].includes(size)) {
+                    return res.status(400).send({ status: false, message: "Size should be from [S, XS, M, X, L, XXL, XL]" })
                 }
             }
-
-            const getProductsList = await productModel.find(obj).sort({ price: 1 })
-
-            if (!getProductsList || getProductsList.length == 0) {
-                res.status(400).send({ status: false, message: `product is not available right now.` })
-            } else {
-                res.status(200).send({ status: true, message: 'Success', data: getProductsList })
-            }
-        } else {
-            const getListOfProducts = await productModel.find({ isDeleted: false, deletedAt: null }).sort({ price: 1 })
-            res.status(200).send({ status: true, message: 'Success', data: getListOfProducts })
         }
-    } catch (err) {
-        return res.status(500).send({ status: false, msg: err.message })
-    }
 
-}
+
+        if ("name" in myObj) {
+            myObj['title'] = { $regex: name }
+            if (!isValid(name)) {
+                res.status(400).send({ status: false, message: "Product name can't be empty" })
+                return
+            }
+        }
+
+        if ("priceGreaterThan" in myObj && "priceLessThan" in myObj) {
+            myObj['price'] = { $gte: priceGreaterThan }
+            myObj['price'] = { $lte: priceLessThan }
+            const productData = await productModel.find(myObj)
+            res.status(200).send({ status: true, message: `Product between price ${priceGreaterThan} to ${priceLessThan}`, data: productData })
+            return
+        }
+
+        if ("priceGreaterThan" in myObj) {
+            myObj['price'] = { $gte: priceGreaterThan }
+            const productData = await productModel.find(myObj)
+            res.status(200).send({ status: true, message: `Product greater than ${priceGreaterThan}`, data: productData })
+            return
+        }
+
+        if ("priceLessThan" in myObj) {
+            myObj['price'] = { $lte: priceLessThan }
+            const productData = await productModel.find(myObj)
+            res.status(200).send({ status: true, message: `Product less than ${priceLessThan}`, data: productData })
+            return
+        }
+
+
+        if ("priceSort" in myObj) {
+
+            if (priceSort == 1) {
+                const productData = await productModel.find(myObj).sort({ price: 1 })
+                res.status(200).send({ status: true, message: "Data Found with Ascending price", data: productData })
+                return
+            }
+            if (priceSort == -1) {
+                const productData = await productModel.find(myObj).sort({ price: -1 })
+                res.status(200).send({ status: true, message: "Data Found with Descending price", data: productData })
+                return
+            }
+            if (!(priceSort === 1 || priceSort === -1)) {
+                res.status(400).send({ status: false, message: "PriceSort Should be 1=(Ascending) or -1=(Descending)" })
+                return
+            }
+        }
+
+        const productData = await productModel.find(myObj)
+
+        if (productData.length === 0) {
+            res.status(404).send({ status: false, message: "Product Data not Found" })
+            return
+        }
+
+        res.status(200).send({ status: true, message: "Data Found", data: productData })
+
+    } catch (err) {
+        res.status(500).send({ status: false, message: err.message });
+    }
+};
 
 //=============================GET PRODUCT======================================
 
