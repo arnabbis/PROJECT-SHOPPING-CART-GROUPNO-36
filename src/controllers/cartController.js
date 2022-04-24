@@ -144,6 +144,7 @@ const createCart = async function(req, res) {
         res.status(500).send({ status: false, message: err.message })
     }
 }
+
 module.exports.createCart = createCart
 
 // ========================================================================= ////update................................................................
@@ -155,16 +156,20 @@ const updateCart = async(req, res) => {
 
         //validation starts.
         if (!isValidObjectId(userId)) {
+
             return res.status(400).send({ status: false, message: "Invalid userId in body" })
         }
 
         let findUser = await userModel.findOne({ _id: userId })
+
         if (!findUser) {
+
             return res.status(400).send({ status: false, message: "UserId does not exits" })
         }
 
         //Authentication & authorization
         if (findUser._id.toString() != req.userId) {
+
             res.status(401).send({ status: false, message: `Unauthorized access! User's info doesn't match` });
             return
         }
@@ -177,37 +182,47 @@ const updateCart = async(req, res) => {
 
         //cart validation
         if (!isValidObjectId(cartId)) {
+
             return res.status(400).send({ status: false, message: "Invalid cartId in body" })
         }
 
         let findCart = await cartModel.findById({ _id: cartId })
+
         if (!findCart) {
+
             return res.status(400).send({ status: false, message: "cartId does not exists" })
         }
 
         //product validation
         if (!isValidObjectId(productId)) {
+
             return res.status(400).send({ status: false, message: "Invalid productId in body" })
         }
 
         let findProduct = await productModel.findOne({ _id: productId, isDeleted: false })
+
         if (!findProduct) {
+
             return res.status(400).send({ status: false, message: "productId does not exists" })
         }
 
         //finding if products exits in cart
         let isProductinCart = await cartModel.findOne({ items: { $elemMatch: { productId: productId } } })
+
         if (!isProductinCart) {
+
             return res.status(400).send({ status: false, message: `This ${productId} product does not exists in the cart` })
         }
 
         //removeProduct validation either 0 or 1.
         if (!(!isNaN(Number(removeProduct)))) {
+
             return res.status(400).send({ status: false, message: `removeProduct should be a valid number either 0 or 1` })
         }
 
         //removeProduct => 0 for product remove completely, 1 for decreasing its quantity.
         if (!((removeProduct === 0) || (removeProduct === 1))) {
+
             return res.status(400).send({ status: false, message: 'removeProduct should be 0 (product is to be removed) or 1(quantity has to be decremented by 1) ' })
         }
 
@@ -220,6 +235,7 @@ const updateCart = async(req, res) => {
             await cartModel.findOneAndUpdate({ _id: cartId }, { $pull: { items: { productId: productId } } }, { new: true })
 
             let quantity = findCart.totalItems - 1
+
             let data = await cartModel.findOneAndUpdate({ _id: cartId }, { $set: { totalPrice: totalAmount, totalItems: quantity } }, { new: true }) //update the cart with total items and totalprice
 
             return res.status(200).send({ status: true, message: `${productId} is been removed`, data: data })
@@ -227,14 +243,18 @@ const updateCart = async(req, res) => {
 
         // decrement quantity
         let totalAmount = findCart.totalPrice - findProduct.price
+
         let itemsArr = findCart.items
 
         for (i in itemsArr) {
             if (itemsArr[i].productId.toString() == productId) {
+
                 itemsArr[i].quantity = itemsArr[i].quantity - 1
 
                 if (itemsArr[i].quantity < 1) {
+
                     await cartModel.findOneAndUpdate({ _id: cartId }, { $pull: { items: { productId: productId } } }, { new: true })
+
                     let quantity = findCart.totalItems - 1
 
                     let data = await cartModel.findOneAndUpdate({ _id: cartId }, { $set: { totalPrice: totalAmount, totalItems: quantity } }, { new: true }) //update the cart with total items and totalprice
@@ -243,6 +263,7 @@ const updateCart = async(req, res) => {
                 }
             }
         }
+
         let data = await cartModel.findOneAndUpdate({ _id: cartId }, { items: itemsArr, totalPrice: totalAmount }, { new: true })
 
         return res.status(200).send({ status: true, message: `${productId} quantity is been reduced By 1`, data: data })
@@ -257,6 +278,7 @@ const updateCart = async(req, res) => {
 const getCart = async(req, res) => {
     try {
         const userId = req.params.userId
+
         if (!(isValid(userId))) { return res.status(400).send({ status: false, message: "userId is required" }) }
 
         if (!isValidObjectId(userId)) { return res.status(400).send({ status: false, message: "Valid userId is required" }) }
@@ -266,6 +288,7 @@ const getCart = async(req, res) => {
         if (!oneUser) { return res.status(400).send({ status: false, Data: "No data found with this userId" }) }
 
         const returningCart = await cartModel.find({ userId: userId })
+        
         if (!returningCart) { return res.status(400).send({ status: false, Data: "No Items added to cart" }) }
 
         if (req.userId != oneUser._id) {
@@ -276,6 +299,7 @@ const getCart = async(req, res) => {
         // let detailsOfItemsByUser={oneUser,returningCart}
 
         return res.status(200).send({ status: true, message: 'Success', data: returningCart })
+
     } catch (err) {
         return res.status(500).send({ status: false, message: err.message })
     }
@@ -283,7 +307,9 @@ const getCart = async(req, res) => {
 
 const deleteCart = async(req, res) => {
     try {
+
         let userId = req.params.userId
+
         if (!(isValid(userId) || isValidObjId.test(userId))) {
             return res.status(400).send({ status: false, message: "ProductId is invalid" })
         }
@@ -324,4 +350,5 @@ const deleteCart = async(req, res) => {
         return res.status(500).send({ status: false, message: err.message })
     }
 }
+
 module.exports = { createCart, updateCart, getCart, deleteCart }

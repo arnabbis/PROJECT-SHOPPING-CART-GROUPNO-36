@@ -111,7 +111,7 @@ const createUser = async function(req, res) {
         }
 
 
-        if (!isValidData(data.address.shipping)) {
+        if (!isValid(data.address.shipping)) {
             return res.status(400).send({
                 status: false,
                 msg: "Plz enter shipping address"
@@ -119,7 +119,7 @@ const createUser = async function(req, res) {
         }
 
 
-        if (!isValidData(data.address.billing)) {
+        if (!isValid(data.address.billing)) {
             return res.status(400).send({
                 status: false,
                 msg: "Plz enter billing address"
@@ -217,7 +217,9 @@ const createUser = async function(req, res) {
 // =====================================LOGIN USER===========================================
 
 const loginUser = async function(req, res) {
+    
     try {
+        
         let user = req.body
 
         if (Object.keys(user) == 0) {
@@ -328,6 +330,8 @@ const getUser = async function(req, res) {
         })
     }
 }
+
+
 
 const userUpdate = async(req, res) => {
     try {
@@ -470,8 +474,8 @@ const userUpdate = async(req, res) => {
 
 module.exports.createUser = createUser
 module.exports.loginUser = loginUser,
-    module.exports.getUser = getUser,
-    module.exports.userUpdate = userUpdate
+module.exports.getUser = getUser,
+module.exports.userUpdate = userUpdate
 
 
 

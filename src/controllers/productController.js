@@ -86,15 +86,34 @@ const createProduct = async function(req, res) {
             })
             return
         }
+
+        
         if (!isValid(currencyId)) {
             return res
                 .status(400)
                 .send({ status: false, message: "currencyId  is required" });
         }
+
+        if(currencyId!="INR"){
+
+            return res
+                .status(400)
+                .send({ status: false, message: "currencyId  should be indian id" });
+
+        }
+        
+        
         if (!isValid(currencyFormat)) {
             return res
                 .status(400)
                 .send({ status: false, message: "currency Format will be updated according to currency ID " });
+        }
+
+        if(currencyFormat!="₹"){
+
+            return res
+                .status(400)
+                .send({ status: false, message: "currency Format should be in indian format only" });
         }
 
         if (!(/(\-?\d+\.?\d{0,2})/.test(price))) {
@@ -145,8 +164,6 @@ const getProductByQuery = async(req, res) => {
         if (priceSort != null) myObj.priceSort = priceSort;
 
         myObj.isDeleted = false;
-
-        if (!Object.keys(req.query).length > 0) return res.status(400).send({ status: true, message: "Please Provide Product data in query" })
 
         if ("size" in myObj) {
             myObj['availableSizes'] = size
@@ -241,7 +258,7 @@ const getProductDetails = async function(req, res) {
         }
 
 
-        let productData = await productModel.findById({ _id: productId })
+        let productData = await productModel.findById({ _id: productId , isDeleted:false})
         if (!productData) {
             res.status(404).send({
                 status: false,
